@@ -91,15 +91,15 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-    RC523_Init();
+  RC523_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		RC523Task();
-		HAL_Delay(3000);
+		ScanChannlx();
+		//HAL_Delay(3000);
 		//HAL_Delay(1000);
     /* USER CODE END WHILE */
 
