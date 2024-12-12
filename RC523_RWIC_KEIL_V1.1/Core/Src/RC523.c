@@ -1,6 +1,7 @@
 #include "RC523.h"
 #include "spi.h"
 #include "string.h"
+#include "main.h"
 
 uint8_t icType[2];
 uint8_t UID[4];
@@ -8,6 +9,43 @@ uint8_t KEY_A[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 uint8_t addr = 0x01;
 uint8_t RData[16];
 uint8_t WData[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+
+enum CHANNLX
+{
+	O1 = 0,
+	O2,
+	O3,
+	O4,
+	O5,
+	O6,
+	O7,
+	O8,
+	CHANNL_NUM
+};
+
+GPIO_TypeDef* Channlx_Port[CHANNL_NUM][2] = 
+{	
+	{O1A_GPIO_Port,O1B_GPIO_Port},
+	{O2A_GPIO_Port,O2B_GPIO_Port},
+	{O3A_GPIO_Port,O3B_GPIO_Port},
+	{O4A_GPIO_Port,O4B_GPIO_Port},
+	{O5A_GPIO_Port,O5B_GPIO_Port},
+	{O6A_GPIO_Port,O6B_GPIO_Port},
+	{O7A_GPIO_Port,O7B_GPIO_Port},
+	{O8A_GPIO_Port,O8B_GPIO_Port}
+};
+
+uint16_t Channlx_Pin[CHANNL_NUM][2] =
+{	
+	{O1A_Pin,O1B_Pin},
+	{O2A_Pin,O2B_Pin},
+	{O3A_Pin,O3B_Pin},
+	{O4A_Pin,O4B_Pin},
+	{O5A_Pin,O5B_Pin},
+	{O6A_Pin,O6B_Pin},
+	{O7A_Pin,O7B_Pin},
+	{O8A_Pin,O8B_Pin}
+};
 
 /**
  * @brief 初始化RC523模块
@@ -19,7 +57,7 @@ void RC523_Init(void) //
     PcdReset();                      // 对模块进行复位操作
     PcdConfigISOType(RC_ISO14443_A); // 设置工作方式
     SelectAllAntennaOff();
-    SelectAntennaOn(O8A_GPIO_Port, O8A_Pin, O8B_GPIO_Port, O8B_Pin); // 默认选择天线1开启							 // 选择天线
+    SelectAntennaOn(O2A_GPIO_Port, O2A_Pin, O2B_GPIO_Port, O2B_Pin); // 默认选择天线1开启							 // 选择天线
     printf("\r\n RC523_Init Success \r\n");
 }
 
@@ -173,8 +211,7 @@ void PcdReset(void) //
     HAL_Delay(1);
 
     WriteReg(CommandReg, PCD_RESETPHASE);
-    while (ReadReg(CommandReg) & 0x10)
-        ;
+    while (ReadReg(CommandReg) & 0x10);
     HAL_Delay(1);
 
     WriteReg(ModeReg, 0x3D);       // 定义发送和接收常用模式 和Mifare卡通讯，CRC初始值0x6363
@@ -797,9 +834,9 @@ void SelectAllAntennaOff(void)
 
 void RC523Task(void)
 {
-    uint8_t i = 0;
+    //uint8_t i = 0;
     uint8_t status = MI_ERR;
-	PcdReset(); // 每次操作卡的时候对卡进行复位防止出现偶数次寻卡失败的问题
+		PcdReset(); // 每次操作卡的时候对卡进行复位防止出现偶数次寻卡失败的问题
     status = PcdRequest(PICC_REQALL, icType); // 寻卡
 		
  
@@ -838,100 +875,114 @@ void RC523Task(void)
         }
     }
 
-    // 先读一下数据
-    if (status == MI_OK)
-    {
-        status = MI_ERR;
+//    // 先读一下数据
+//    if (status == MI_OK)
+//    {
+//        status = MI_ERR;
 
-        status = PcdRead(addr, RData);
-        if (status == MI_OK)
-        {
-            printf("wirte Before Data:");
-            for (i = 0; i < 16; i++)
-            {
-                printf("%02x", RData[i]);
-            }
-            printf("\r\n");
-        }
-        else
-        {
-            printf("PcdRead() failed\r\n");
-        }
-        //HAL_Delay(1000);
-    }
+//        status = PcdRead(addr, RData);
+//        if (status == MI_OK)
+//        {
+//            printf("wirte Before Data:");
+//            for (i = 0; i < 16; i++)
+//            {
+//                printf("%02x", RData[i]);
+//            }
+//            printf("\r\n");
+//        }
+//        else
+//        {
+//            printf("PcdRead() failed\r\n");
+//        }
+//        //HAL_Delay(1000);
+//    }
 
-    // 写卡
-    if (status == MI_OK)
-    {
-        status = MI_ERR;
+//    // 写卡
+//    if (status == MI_OK)
+//    {
+//        status = MI_ERR;
 
-        status = PcdWrite(addr, WData);
+//        status = PcdWrite(addr, WData);
 
-        if (status == MI_OK)
-        {
-            printf("PcdWrite() success\r\n");
-        }
-        else
-        {
-            printf("PcdWrite() failed\r\n");
-        }
-        //HAL_Delay(1000);
-    }
+//        if (status == MI_OK)
+//        {
+//            printf("PcdWrite() success\r\n");
+//        }
+//        else
+//        {
+//            printf("PcdWrite() failed\r\n");
+//        }
+//        //HAL_Delay(1000);
+//    }
 
-    if (status == MI_OK)
-    {
-        status = MI_ERR;
+//    if (status == MI_OK)
+//    {
+//        status = MI_ERR;
 
-        status = PcdRead(addr, RData);
-        if (status == MI_OK)
-        {
-            printf("wirte after Data:");
-            for (i = 0; i < 16; i++)
-            {
-                printf("%02x", RData[i]);
-            }
-            printf("\r\n");
-        }
-        else
-        {
-            printf("PcdRead() failed\r\n");
-        }
-    }
-		
-		    if (status == MI_OK)
-    {
-        status = MI_ERR;
+//        status = PcdRead(addr, RData);
+//        if (status == MI_OK)
+//        {
+//            printf("wirte after Data:");
+//            for (i = 0; i < 16; i++)
+//            {
+//                printf("%02x", RData[i]);
+//            }
+//            printf("\r\n");
+//        }
+//        else
+//        {
+//            printf("PcdRead() failed\r\n");
+//        }
+//    }
+//		
+//		    if (status == MI_OK)
+//    {
+//        status = MI_ERR;
 
-        status = PcdWrite(0x02, WData);
+//        status = PcdWrite(0x02, WData);
 
-        if (status == MI_OK)
-        {
-            printf("PcdWrite() success\r\n");
-        }
-        else
-        {
-            printf("PcdWrite() failed\r\n");
-        }
-        //HAL_Delay(1000);
-    }
+//        if (status == MI_OK)
+//        {
+//            printf("PcdWrite() success\r\n");
+//        }
+//        else
+//        {
+//            printf("PcdWrite() failed\r\n");
+//        }
+//        //HAL_Delay(1000);
+//    }
 
-    if (status == MI_OK)
-    {
-        status = MI_ERR;
+//    if (status == MI_OK)
+//    {
+//        status = MI_ERR;
 
-        status = PcdRead(0x02, RData);
-        if (status == MI_OK)
-        {
-            printf("wirte after Data:");
-            for (i = 0; i < 16; i++)
-            {
-                printf("%02x", RData[i]);
-            }
-            printf("\r\n");
-        }
-        else
-        {
-            printf("PcdRead() failed\r\n");
-        }
-    }
+//        status = PcdRead(0x02, RData);
+//        if (status == MI_OK)
+//        {
+//            printf("wirte after Data:");
+//            for (i = 0; i < 16; i++)
+//            {
+//                printf("%02x", RData[i]);
+//            }
+//            printf("\r\n");
+//        }
+//        else
+//        {
+//            printf("PcdRead() failed\r\n");
+//        }
+//    }
+}
+
+
+void ScanChannlx(void)
+{
+	uint8_t i = 0;
+	for(i = 0 ; i < 8; i++)
+	{
+		printf("CHANNL %d \r\n",i + 1);
+		SelectAllAntennaOff();
+    SelectAntennaOn(Channlx_Port[i][0], Channlx_Pin[i][0], Channlx_Port[i][1], Channlx_Pin[i][1]);
+		RC523Task();
+		HAL_Delay(1000);
+	}
 }

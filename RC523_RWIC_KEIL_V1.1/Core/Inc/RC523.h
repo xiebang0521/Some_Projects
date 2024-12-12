@@ -173,6 +173,7 @@ void SelectAntennaOn(GPIO_TypeDef* GPIOx_OA, uint16_t GPIO_Pin_OA,GPIO_TypeDef* 
 void SelectAntennaOff(GPIO_TypeDef* GPIOx_OA, uint16_t GPIO_Pin_OA,GPIO_TypeDef* GPIOx_OB, uint16_t GPIO_Pin_OB);
 void SelectAllAntennaOff(void);
 void RC523Task(void);
+void ScanChannlx(void);
 extern char *POINT_LNG;
 extern char *POINT_LAT;
 extern char *POINT_LNG_ON;
